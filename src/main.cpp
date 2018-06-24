@@ -27,7 +27,7 @@ void processInput(GLFWwindow *window);
 
 int width = 800;
 int height = 600;
-
+float rads = 0;
 
 int main( void )
 {
@@ -86,8 +86,9 @@ int main( void )
 	//glm::mat4 Projection = glm::ortho(-10.0f,10.0f,-10.0f,10.0f,0.0f,100.0f); // In world coordinates
 	
 	// Camera matrix
+	glm::vec3 cameraPosition = glm::vec3(-4,3,3);
 	glm::mat4 View = glm::lookAt(
-		glm::vec3(-4,3,3), // Camera is at (4,3,3), in World Space
+		cameraPosition, // Camera is at (4,3,3), in World Space
 		glm::vec3(0,0,0), // and looks at the origin
 		glm::vec3(0,1,0)  // Head is up (set to 0,-1,0 to look upside-down)
 	);
@@ -163,13 +164,15 @@ int main( void )
     }
     stbi_image_free(data);
 
-	glm::vec3 dir_luz = glm::vec3(-1,0,0);
-	GLuint LuzID = glGetUniformLocation(programID, "luzDir");
+	glm::vec3 luz_pos = glm::vec3(-3,0,0);
+	GLuint LuzID = glGetUniformLocation(programID, "luzPos");
+
+	GLuint cameraID = glGetUniformLocation(programID, "camPos");
 	do{
-
+		processInput(window);
 		double seconds = glfwGetTime();
-
-		Model = glm::rotate(glm::radians(360.0f/10.0f*float(seconds)), glm::vec3(0.0f,1.0f,0.0f));
+		// rads = 360.0f/10.0f*float(seconds);
+		Model = glm::rotate(glm::radians(rads), glm::vec3(0.0f,1.0f,0.0f));
 		// View = glm::lookAt(
 		// 	glm::vec3( cos( seconds * 10 * PI / 180.0 )*3 ,0,3), // Camera is at (4,3,3), in World Space
 		// 	glm::vec3(0,0,0), // and looks at the origin
@@ -186,12 +189,13 @@ int main( void )
 		glUniformMatrix4fv(ViewID, 1, GL_FALSE, &View[0][0]);
 		glUniformMatrix4fv(ProjID, 1, GL_FALSE, &Projection[0][0]);
 		// glUniform3f(LuzID, dir_luz.x, dir_luz.y, dir_luz.z);
-		glUniform3fv(LuzID, 1, &dir_luz[0]);
+		glUniform3fv(LuzID, 1, &luz_pos[0]);
+		glUniform3fv(cameraID, 1, &cameraPosition[0]);
 
 		// 1rst attribute buffer : vertices
 		glEnableVertexAttribArray(0);
 		glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-		//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO2);
+		// glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO2);
 		glVertexAttribPointer(
 			0,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
 			3,                  // size
@@ -224,7 +228,7 @@ int main( void )
 		// );
 		// Draw the triangle !
 		glDrawArrays(GL_TRIANGLES, 0, 12*3);
-//        glDrawElements(GL_TRIANGLES, 12*3, GL_UNSIGNED_INT, 0);
+        // glDrawElements(GL_TRIANGLES, 12*3, GL_UNSIGNED_INT, 0);
 
 		glDisableVertexAttribArray(0);
 		glDisableVertexAttribArray(1);
@@ -250,4 +254,12 @@ void processInput(GLFWwindow *window)
 {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
+	// Move forward
+	if (glfwGetKey(window, GLFW_KEY_UP ) == GLFW_PRESS){
+		rads += 1.0f;
+	}
+	// Move backward
+	if (glfwGetKey(window, GLFW_KEY_DOWN ) == GLFW_PRESS){
+		rads -= 1.0f;
+	}
 }

@@ -7,16 +7,17 @@ layout(location = 1) in vec3 vertexNormal;
 uniform mat4 Model;
 uniform mat4 View;
 uniform mat4 Projection;
-uniform vec3 luzDir;
+
 out vec3 Normal;
-out vec3 Luz;
+out vec3 objPos;
 
 void main(){
 
   mat4 MVP = Projection * View * Model;
-  gl_Position =  MVP * vec4(vertexPosition_modelspace,1);
-  Normal = (Model * vec4(vertexNormal,0)).xyz;
+  objPos = vec3(Model * vec4(vertexPosition_modelspace, 1.0));
   // Normal = vertexNormal;
-  Luz = luzDir;
+  Normal = mat3(transpose(inverse(Model))) * vertexNormal;
+      
+  gl_Position = Projection * View * vec4(objPos, 1.0);
 }
 
